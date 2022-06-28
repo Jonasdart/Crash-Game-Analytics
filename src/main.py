@@ -1,8 +1,9 @@
 from time import sleep
 from utils import persist as dbController
-from utils import ships as shipsController
+from utils.ships import Ships
 from utils import bets as betsController
 
+shipsController = Ships()
 
 def start_up():
     ships = shipsController.get_ships()
@@ -12,14 +13,15 @@ def start_up():
 
 def listen_realtime_bets():
     bets = betsController.get_bets()
-    ship = shipsController.get_last_ship()
-    dbController.save_ship_data(ship, bets)
+    if bets:
+        ship = shipsController.get_last_ship()
+        dbController.save_ship_data(ship, bets)
 
 
 def start():
     while True:
         listen_realtime_bets()
-        sleep(0.5)
+        sleep(0.1)
 
 if __name__ == '__main__':
     start_up()

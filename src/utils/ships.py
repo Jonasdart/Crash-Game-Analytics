@@ -1,15 +1,25 @@
 import requests
+from time import sleep
 
-main_url = "https://api.betfiery.com/game/crash/list/ship"
+BASE_URL = "https://api.betfiery.com/game/crash/list/ship"
+BET_TIME = 5
+
+class Ships:
+    def __init__(self):
+        self.last_ship = None
 
 
-def get_ships() -> list:
-    ships = requests.post(main_url).json()["data"]
-    
-    return ships
+    def get_ships(self) -> list:
+        ships = requests.post(BASE_URL).json()["data"]
+        
+        return ships
 
 
-def get_last_ship() -> dict:
-    ship = requests.post(main_url).json()["data"][0]
+    def get_last_ship(self) -> dict:
+        while True:
+            ship = requests.post(BASE_URL).json()["data"][0]
+            if ship != self.last_ship:
+                self.last_ship = ship
+                return ship
 
-    return ship
+            sleep(BET_TIME)
