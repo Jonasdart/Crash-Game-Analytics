@@ -1,7 +1,7 @@
 from time import sleep
-import persist as dbController
-import ships as shipsController
-import bets as betsController
+from utils import persist as dbController
+from utils import ships as shipsController
+from utils import bets as betsController
 
 
 def start_up():

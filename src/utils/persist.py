@@ -1,6 +1,6 @@
 from tinydb import TinyDB, Query
 
-db = TinyDB("persistence.json")
+db = TinyDB("outputs/persistence.json")
 
 def save_ship_data(ship, bets=[]) -> bool:
     table = db.table("ships")
