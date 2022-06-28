@@ -13,7 +13,6 @@ def get_bets() -> list:
             break
         bets = response.json()["data"]["data"]
 
-        sleep(1)
+        sleep(0.5)
         
-    print(f"---- {len(bets)} Apostas nesta rodada ----")
     return bets
