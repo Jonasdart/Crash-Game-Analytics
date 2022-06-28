@@ -3,7 +3,7 @@ import requests
 from time import sleep
 
 BASE_URL = "https://api.betfiery.com/game/crash/list/tickets"
-MAX_OCCURRENCES = 3
+MAX_OCCURRENCES = 5
 
 
 def get_bets() -> list:
