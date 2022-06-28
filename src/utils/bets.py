@@ -1,4 +1,3 @@
-from itertools import count
 import requests
 from time import sleep
 
