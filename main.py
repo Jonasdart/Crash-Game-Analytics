@@ -19,7 +19,7 @@ def listen_realtime_bets():
 def start():
     while True:
         listen_realtime_bets()
-        sleep(0.5)
+        sleep(4)
 
 if __name__ == '__main__':
     start_up()
