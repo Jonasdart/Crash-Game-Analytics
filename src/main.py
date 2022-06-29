@@ -5,6 +5,7 @@ from utils import bets as betsController
 
 shipsController = Ships()
 
+
 def start_up():
     ships = shipsController.get_ships()
     for ship in ships:
@@ -23,6 +24,7 @@ def start():
         listen_realtime_bets()
         sleep(0.1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     start_up()
     start()
