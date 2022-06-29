@@ -1,6 +1,10 @@
+import logging
 from tinydb import TinyDB, Query
 
 db = TinyDB("outputs/persistence.json")
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s-%(levelname)s: ---- %(message)s')
 
 def save_ship_data(ship, bets=[]) -> bool:
     table = db.table("ships")
@@ -10,7 +14,8 @@ def save_ship_data(ship, bets=[]) -> bool:
         ship["bets"] = bets
 
         inserted = table.insert(ship) > 0
-        print(f"---- Multiplicador: {ship['result']} -  {len(bets)} Apostas nesta rodada ----")
+        logging.info(f"Multiplicador: {ship['result']} - {len(bets)} Apostas nesta rodada")
+        logging.info(f"{table.count(Ship._id != '')} Rodadas persistidas")
 
         return inserted
     
