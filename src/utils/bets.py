@@ -3,6 +3,7 @@ from time import sleep
 
 BASE_URL = "https://api.betfiery.com/game/crash/list/tickets"
 MAX_OCCURRENCES = 5
+CASHOUT_MARGIN = 10
 
 
 def get_bets() -> list:
@@ -18,6 +19,8 @@ def get_bets() -> list:
             if len(_bets) == len(bets):
                 count_estabilization += 1
 
+            if len(_bets) <= len(bets) - CASHOUT_MARGIN:
+                return bets
             if count_estabilization >= MAX_OCCURRENCES:
                 return bets
             if len(_bets) == 0:
