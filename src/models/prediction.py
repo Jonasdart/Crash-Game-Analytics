@@ -29,6 +29,7 @@ class Model:
         table = db.table("ships")
         data = table.all()
 
+        data.sort(key=lambda x: x["_id"])
         for _index, _data in enumerate(data.copy()):
             try:
                 data[_index + 1]["last_game"] = _data["result"]
@@ -36,8 +37,6 @@ class Model:
                 continue
 
         data = pd.DataFrame(data)
-        data["create_at"] = pd.to_datetime(data["create_at"])
-        data.sort_values(by="create_at")
 
         return data
 
@@ -89,18 +88,11 @@ class Model:
     def predict(self, ships):
         df = []
         for ship in ships:
-            df.append(
-                {
-                    "last_game": ship["result"],
-                    "goal": 1.4,
-                    "create_at": ship["create_at"],
-                }
-            )
+            df.append({"_id": ship["_id"], "last_game": ship["result"], "goal": 1.4})
 
         df = pd.DataFrame(df)
-        df["create_at"] = pd.to_datetime(df["create_at"])
-        df.sort_values(by="create_at")
+        df = df.sort_values(by="_id", ascending=True)
 
-        prediction = self.model.predict(df.drop(["create_at"], axis=1))
+        prediction = self.model.predict(df.drop(["_id"], axis=1))
 
         return prediction

@@ -27,7 +27,7 @@ def listen_realtime_bets():
 def get_prediction() -> int:
     """Predicts whether the next flight will reach the objective"""
     ships = shipsController.get_ships()
-    prediction = model.predict(ships)[0]
+    prediction = model.predict(ships)[-1]
 
     return prediction
 
