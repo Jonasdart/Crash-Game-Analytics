@@ -2,7 +2,7 @@ import requests
 from time import sleep
 
 BASE_URL = "https://api.betfiery.com/game/crash/list/ship"
-BET_TIME = 5
+BET_TIME = 10
 
 
 class Ships:
