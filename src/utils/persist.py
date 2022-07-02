@@ -1,4 +1,5 @@
 import logging
+from msilib.schema import tables
 from tinydb import TinyDB, Query
 
 db = TinyDB("outputs/persistence.json")
@@ -36,3 +37,9 @@ def save_predict_data(prediction: int, ship_data: dict):
     })
     logging.info(f"Prediction: {prediction} | Hit: {prediction == ship_data['win']}")
     return inserted > 0
+
+
+def renew_predictions():
+    Predictions = Query()
+    table = db.table("predictions")
+    table.remove(Predictions.ship != '')
