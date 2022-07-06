@@ -2,8 +2,9 @@ import logging
 import joblib
 import pandas as pd
 from tinydb import TinyDB, Query
-from sklearn.neural_network import MLPRegressor
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.linear_model import ARDRegression
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, VotingClassifier, AdaBoostClassifier
 from sklearn.model_selection import (
     train_test_split,
     KFold,
@@ -16,6 +17,7 @@ from utils.persist import db
 from utils.ships import Ships
 
 BET_AMOUNT = 1
+
 
 class Model:
     def __init__(self, goal):
@@ -62,8 +64,6 @@ class Model:
                 "state",
                 "ship_type",
                 "f_seed",
-                "update_at",
-                "create_at",
                 "round_time",
                 "bets",
             ],
@@ -72,29 +72,44 @@ class Model:
 
         return data.dropna()
 
-    def define_goal(
-        self, data
-    ):
+    def define_goal(self, data):
         data["goal"] = self.goal
 
         return data
 
     def set_wins(self, data):
-        data["win"] = pd.Series(data["result"] >= data["goal"]).astype(
-            int
-        )
+        data["win"] = pd.Series(data["result"] >= data["goal"]).astype(int)
 
         return data
 
     def get_model(self):
-        self.model = RandomForestClassifier(
-            n_estimators=1000, min_samples_leaf=1, random_state=0
-        )
-
         # self.model = MLPRegressor(learning_rate_init=0.1, max_iter=10000, activation="logistic", random_state=0, power_t=1.5)
+        # self.model = MLPClassifier(random_state=0, learning_rate='adaptive', max_iter=2000)
+        self.model = RandomForestClassifier(
+            n_estimators=500, min_samples_leaf=1, random_state=0
+        )
+        # self.model = AdaBoostClassifier(random_state=2)
+        # self.model = ARDRegression()
+        # self.model = RandomForestRegressor()
 
-        print(f"Training with : {len(self.data)} data")
-        self.model.fit(self.data.drop(["result", "win"], axis=1), self.data["win"])
+        logging.info(f"Training with : {len(self.data)} data")
+
+        labelEncoder = preprocessing.LabelEncoder()
+        labelEncoder.fit(self.data["create_at"])
+        self.data["create_at"] = labelEncoder.transform(self.data["create_at"])
+        labelEncoder.fit(self.data["update_at"])
+        self.data["update_at"] = labelEncoder.transform(self.data["update_at"])
+
+        xtrain, xtest, ytrain, ytest = train_test_split(
+            self.data.drop(["result", "win"], axis=1),
+            self.data["win"],
+            test_size=0.1,
+            random_state=42,
+        )
+        self.model.fit(xtrain, ytrain)
+        predict = self.model.predict(xtest)
+        logging.info(f"Score do treino: {round(accuracy_score(predict, ytest) * 100)}%")
+        # self.model.fit(self.data.drop(["result", "win"], axis=1), self.data["win"])
 
         return self.model
 
@@ -105,13 +120,15 @@ class Model:
         # if self.count_predictions >= 5:
         #     self.train()
 
+        df = []
         for ship in ships:
-            df = []
             df.append(
                 {
                     "_id": ship["next_id"],
                     "previous_id": ship["_id"],
                     "next_id": ship["next_id"] + 1,
+                    "create_at": ship["create_at"],
+                    "update_at": ship["update_at"],
                     "last_game": ship["result"],
                     "goal": self.goal,
                     "win": ship["result"] >= self.goal,
@@ -125,11 +142,18 @@ class Model:
         # df = self.define_goal(df)
         # df = self.set_wins(df)
         df = df.sort_values(by="_id", ascending=False)
+        df = df.head(1)
 
-        prediction = self.model.predict(df.drop(['result', 'win'], axis=1))
+        labelEncoder = preprocessing.LabelEncoder()
+        labelEncoder.fit(df["create_at"])
+        df["create_at"] = labelEncoder.transform(df["create_at"])
+        labelEncoder.fit(df["update_at"])
+        df["update_at"] = labelEncoder.transform(df["update_at"])
+
+        prediction = self.model.predict(df.drop(["result", "win"], axis=1))
         self.count_predictions += 1
 
-        # logging.info(f"Last game: {df['last_game'][0]}")
+        logging.info(f"Last game: {df['last_game'][0]}")
         logging.info(f"Next game prediction: {round(prediction[0], 2)}")
 
         return prediction

@@ -36,6 +36,20 @@ class Bet:
         self.purse_value = 0.0
         self.last_result_is_win = 1
 
+    def get_bet_status(self):
+        bet_button = self.driver.find_element(
+                By.CLASS_NAME, "betButton_betBtnText__oEDHG"
+            )
+        
+        if bet_button.text.upper() == 'APOSTA':
+            return 'wait'
+        if bet_button.text.upper() == '':
+            return 'starting'
+        if bet_button.text.upper() == 'BET':
+            return 'starting'
+        if bet_button.text.upper() == 'SAQUE':
+            return 'flying'
+
     def __load_chrome_options(self):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--mute-audio")
@@ -44,11 +58,11 @@ class Bet:
         return chrome_options
 
     def _win(self):
-        logging.info(f"Win")
+        # logging.info(f"Win")
         self.last_result_is_win = 1
 
     def _lose(self):
-        logging.info(f"Lose")
+        # logging.info(f"Lose")
         self.last_result_is_win = 0
 
     def login(self):
@@ -104,7 +118,6 @@ class Bet:
         return float(purse_value)
 
     def get_next_bet_value(self) -> int:
-        logging.info("-" * 10)
         logging.info(f"Banca: R$ {self.purse_value}")
         if self.last_result_is_win:
             return self.purse_value * (BET_PERCENT * 0.01)
@@ -174,29 +187,31 @@ class Bet:
             sleep(4)
 
     def bet(self):
-        bet_status = "Wait"
         while True:
-            bet_button = self.driver.find_element(
-                By.CLASS_NAME, "betButton_betBtnText__oEDHG"
-            )
-            if bet_status == "Wait":
-                if bet_button.text.upper() == "APOSTA":
-                    actual_purse_value = self.acquire_purse_value()
-                    self.valide_purse_state(actual_purse_value)
-                    self.purse_value = actual_purse_value
+            bet_status = self.get_bet_status()
+            if bet_status == "wait":
+                actual_purse_value = self.acquire_purse_value()
+                self.valide_purse_state(actual_purse_value)
+                self.purse_value = actual_purse_value
 
-                    self.saque()
+                self.saque()
 
-                    bet_amount = self.round_bet_value(self.get_next_bet_value())
-                    self.send_bet(bet_amount)
-                    bet_status = "Bet"
-            elif bet_status == "Bet":
-                if bet_button.text.upper() != "APOSTA":
-                    bet_status = "Wait"
+                bet_amount = self.round_bet_value(self.get_next_bet_value())
+                self.send_bet(bet_amount)
 
             sleep(1)
 
-    def send_bet(self, value):
+    async def send_bet_with_money_control(self):
+        actual_purse_value = self.acquire_purse_value()
+        self.valide_purse_state(actual_purse_value)
+        self.purse_value = actual_purse_value
+
+        self.saque()
+
+        bet_amount = self.round_bet_value(self.get_next_bet_value())
+        await self.send_bet(bet_amount)
+
+    async def send_bet(self, value):
         value = self.previne_critical_lose(value)
         logging.info(f"Apostando {value} em {MULTI_ODD}x")
         WebDriverWait(self.driver, 5).until(

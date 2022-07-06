@@ -9,16 +9,13 @@ logging.basicConfig(
 )
 
 
-def save_ship_data(ship) -> bool:
+async def save_ship_data(ship) -> bool:
     table = db.table("ships")
     Ship = Query()
 
     if not table.get(Ship._id == ship["_id"]):
         ship["bets"] = []
         inserted = table.insert(ship) > 0
-        logging.info(
-            f"Multiplicador: {ship['result']}"
-        )
         # logging.info(f"{table.count(Ship._id != '')} Rodadas persistidas")
 
         return inserted
@@ -26,7 +23,7 @@ def save_ship_data(ship) -> bool:
     return False
 
 
-def save_predict_data(prediction: int, ship_data: dict):
+async def save_predict_data(prediction: int, ship_data: dict):
     table = db.table("predictions")
     inserted = table.insert({
         'ship': ship_data['_id'],
@@ -35,7 +32,6 @@ def save_predict_data(prediction: int, ship_data: dict):
         'prediction': int(prediction),
         'hit': int(prediction == ship_data['win'])
     })
-    logging.info(f"Prediction: {prediction} | Hit: {prediction == ship_data['win']}")
     return inserted > 0
 
 

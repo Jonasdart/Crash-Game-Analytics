@@ -1,3 +1,4 @@
+import logging
 import requests
 from time import sleep
 
@@ -14,11 +15,13 @@ class Ships:
 
         return ships
 
-    def get_last_ship(self) -> dict:
-        while True:
-            ship = requests.post(BASE_URL).json()["data"][0]
-            if ship != self.last_ship:
-                self.last_ship = ship
-                return ship
+    def get_last_ship(self, bot_controller) -> dict:
+        logging.info("Waiting ship crash")
+        while bot_controller.get_bet_status() == 'wait': 
+            sleep(0.1)
+        while bot_controller.get_bet_status() != 'wait':
+            sleep(0.1)
 
-            sleep(BET_TIME)
+        sleep(1)
+        ship = requests.post(BASE_URL).json()["data"][0]
+        return ship
